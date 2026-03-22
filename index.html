@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Учёба — викторина</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --glass-bg: rgba(255, 255, 255, 0.14);
+        --glass-border: rgba(255, 255, 255, 0.28);
+        --glass-shadow: 0 24px 80px rgba(15, 23, 42, 0.35);
+        --text: #f1f5f9;
+        --text-muted: rgba(241, 245, 249, 0.72);
+        --accent: #38bdf8;
+        --accent-2: #a78bfa;
+        --radius-lg: 20px;
+        --radius-md: 14px;
+        --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "DM Sans", system-ui, sans-serif;
+        color: var(--text);
+        overflow-x: hidden;
+        background: #0f172a;
+      }
+
+      /* Animated mesh background */
+      .page-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background: radial-gradient(ellipse 120% 80% at 20% 20%, rgba(56, 189, 248, 0.35), transparent 55%),
+          radial-gradient(ellipse 100% 70% at 85% 15%, rgba(167, 139, 250, 0.32), transparent 50%),
+          radial-gradient(ellipse 90% 60% at 50% 100%, rgba(244, 114, 182, 0.18), transparent 45%),
+          linear-gradient(165deg, #0c1222 0%, #1e1b4b 38%, #0f172a 72%, #020617 100%);
+        background-size: 200% 200%;
+        animation: mesh-shift 18s ease-in-out infinite alternate;
+      }
+
+      @keyframes mesh-shift {
+        0% {
+          background-position: 0% 0%, 100% 0%, 50% 100%, 0% 0%;
+        }
+        100% {
+          background-position: 100% 40%, 0% 60%, 40% 0%, 0% 0%;
+        }
+      }
+
+      .page-bg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      .orb {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.45;
+        z-index: 0;
+        pointer-events: none;
+        animation: float-orb 14s var(--ease-out) infinite;
+      }
+
+      .orb--1 {
+        width: min(420px, 55vw);
+        height: min(420px, 55vw);
+        top: -8%;
+        left: -10%;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.55), transparent 70%);
+        animation-delay: 0s;
+      }
+
+      .orb--2 {
+        width: min(380px, 50vw);
+        height: min(380px, 50vw);
+        bottom: -5%;
+        right: -8%;
+        background: radial-gradient(circle, rgba(167, 139, 250, 0.5), transparent 70%);
+        animation-delay: -5s;
+        animation-duration: 17s;
+      }
+
+      .orb--3 {
+        width: min(280px, 40vw);
+        height: min(280px, 40vw);
+        top: 42%;
+        left: 35%;
+        background: radial-gradient(circle, rgba(244, 114, 182, 0.35), transparent 70%);
+        animation-delay: -9s;
+        animation-duration: 20s;
+        opacity: 0.3;
+      }
+
+      @keyframes float-orb {
+        0%,
+        100% {
+          transform: translate(0, 0) scale(1);
+        }
+        33% {
+          transform: translate(3%, 4%) scale(1.05);
+        }
+        66% {
+          transform: translate(-4%, 2%) scale(0.96);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .page-bg {
+          animation: none;
+        }
+        .orb {
+          animation: none;
+        }
+        .screen,
+        .glass-card,
+        #portrait-frame,
+        #portrait-img {
+          transition: none !important;
+        }
+        #portrait-frame.portrait-anim {
+          animation: none;
+        }
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(1rem, 4vw, 2rem);
+      }
+
+      .screen {
+        width: 100%;
+        max-width: 440px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%) translateY(14px) scale(0.97);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.5s var(--ease-out), transform 0.55s var(--ease-out), visibility 0.55s;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .screen.is-active {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, -50%) translateY(0) scale(1);
+        pointer-events: auto;
+        z-index: 2;
+      }
+
+      .glass-card {
+        width: 100%;
+        padding: clamp(1.75rem, 5vw, 2.25rem);
+        border-radius: var(--radius-lg);
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        animation: card-rise 0.7s var(--ease-out) both;
+      }
+
+      @keyframes card-rise {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .brand {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+      }
+
+      .title {
+        font-size: clamp(1.75rem, 5vw, 2.125rem);
+        font-weight: 700;
+        margin: 0 0 0.35rem;
+        letter-spacing: -0.02em;
+        background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.82) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .subtitle {
+        margin: 0 0 1.75rem;
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+      }
+
+      #btn-start {
+        font-family: inherit;
+        font-size: 1.05rem;
+        font-weight: 600;
+        padding: 0.95rem 2.75rem;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        color: #0f172a;
+        background: linear-gradient(135deg, #e0f2fe 0%, #fff 45%, #fae8ff 100%);
+        box-shadow: 0 4px 24px rgba(56, 189, 248, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+        transition: transform 0.35s var(--ease-out), box-shadow 0.35s ease;
+      }
+
+      #btn-start:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 12px 40px rgba(167, 139, 250, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      }
+
+      #btn-start:active {
+        transform: translateY(0) scale(0.98);
+      }
+
+      #quiz-screen .glass-card {
+        animation: none;
+      }
+
+      #quiz-screen.is-active .glass-card {
+        animation: card-rise 0.6s var(--ease-out) both;
+      }
+
+      #progress {
+        text-align: center;
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+      }
+
+      #portrait-frame {
+        width: 100%;
+        max-width: 360px;
+        margin: 0 auto 1.25rem;
+        overflow: hidden;
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+        background: rgba(15, 23, 42, 0.5);
+        transition: box-shadow 0.4s ease, border-color 0.4s ease;
+      }
+
+      #portrait-frame.portrait-anim {
+        animation: portrait-in 0.55s var(--ease-out) both;
+      }
+
+      @keyframes portrait-in {
+        from {
+          opacity: 0;
+          transform: translateY(14px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      #portrait-img {
+        display: block;
+        width: 100%;
+        height: auto;
+        vertical-align: top;
+        transition: transform 0.45s var(--ease-out), opacity 0.35s ease;
+      }
+
+      .hint {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        text-align: center;
+        line-height: 1.55;
+        margin: 0 0 1rem;
+      }
+
+      #answer {
+        width: 100%;
+        font-family: inherit;
+        font-size: 1rem;
+        padding: 0.85rem 1.1rem;
+        border: 2px solid rgba(255, 255, 255, 0.18);
+        border-radius: var(--radius-md);
+        background: rgba(15, 23, 42, 0.45);
+        color: var(--text);
+        transition: border-color 0.35s ease, background-color 0.35s ease, box-shadow 0.35s ease;
+      }
+
+      #answer::placeholder {
+        color: rgba(241, 245, 249, 0.35);
+      }
+
+      #answer:focus {
+        outline: none;
+        border-color: rgba(56, 189, 248, 0.65);
+        box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
+      }
+
+      #answer.ok {
+        background: rgba(34, 197, 94, 0.18);
+        border-color: rgba(74, 222, 128, 0.65);
+        box-shadow: 0 0 24px rgba(74, 222, 128, 0.2);
+      }
+
+      #answer.bad {
+        background: rgba(248, 113, 113, 0.14);
+        border-color: rgba(248, 113, 113, 0.55);
+        box-shadow: 0 0 20px rgba(248, 113, 113, 0.12);
+      }
+
+      .actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        justify-content: stretch;
+      }
+
+      #btn-check {
+        flex: 1;
+        min-width: 120px;
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 0.75rem 1.25rem;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        color: #fff;
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.9), rgba(129, 140, 248, 0.95));
+        box-shadow: 0 8px 28px rgba(99, 102, 241, 0.35);
+        transition: transform 0.3s var(--ease-out), box-shadow 0.3s ease;
+      }
+
+      #btn-check:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 36px rgba(56, 189, 248, 0.4);
+      }
+
+      #btn-check:active {
+        transform: translateY(0);
+      }
+
+      .screens-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 440px;
+        min-height: min(70vh, 520px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-bg" aria-hidden="true"></div>
+    <div class="orb orb--1" aria-hidden="true"></div>
+    <div class="orb orb--2" aria-hidden="true"></div>
+    <div class="orb orb--3" aria-hidden="true"></div>
+
+    <main>
+      <div class="screens-wrap">
+        <section id="start-screen" class="screen screen--start is-active" aria-label="Начало">
+          <div class="glass-card">
+            <p class="brand">Учёба</p>
+            <h1 class="title">Викторина</h1>
+            <p class="subtitle">10 случайных портретов. Введите ФИО и годы жизни — как в учебнике.</p>
+            <button type="button" id="btn-start">Начать</button>
+          </div>
+        </section>
+
+        <section id="quiz-screen" class="screen screen--quiz" aria-label="Вопрос">
+          <div class="glass-card">
+            <p id="progress"></p>
+            <div id="portrait-frame">
+              <img id="portrait-img" src="" alt="Портрет" width="400" height="600" />
+            </div>
+            <p class="hint">
+              Полностью ФИО и годы жизни, например:<br />
+              Иванов Иван Иванович (1900-1950)
+            </p>
+            <input type="text" id="answer" autocomplete="off" placeholder="Ваш ответ" />
+            <div class="actions">
+              <button type="button" id="btn-check">Проверить</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
